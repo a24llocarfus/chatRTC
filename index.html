@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatRTC Llorenç</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Formulari login -->
+    <div id="login-container" class="login-container">
+      <form id="login-form" class="login-form">
+        <h2 class="login-title">Entrada al xat</h2>
+        <input 
+          type="text" 
+          id="username-input" 
+          class="login-input" 
+          maxlength="20" 
+          placeholder="Escriu el teu nom..." 
+          required 
+          autocomplete="off" 
+        />
+        <button type="submit" class="login-btn">Entrar</button>
+      </form>
+    </div>
+
+    <!-- llista de missatges i formulari a la part inferior -->
+    <div id="chat">
+      <header id="chat-header">
+        <h2>ChatRTC</h2>
+        <div>Usuari: <strong id="current-user"></strong></div>
+        <div id="status" class="status-disconnected">Desconnectat</div>
+      </header>
+
+      <ul id="messages"></ul>
+
+      <form id="form" action="">
+        <input id="input" autocomplete="off" maxlength="500" placeholder="Escriu un missatge..." />
+        <button id="send-btn">Send</button>
+      </form>
+    </div>
+    
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+
+      //chat
+      const form = document.getElementById('form');
+      const input = document.getElementById('input');
+      const messages = document.getElementById('messages');
+      const chat = document.getElementById('chat');
+      const sendBtn = document.getElementById('send-btn');
+      const statusElement = document.getElementById('status');
+      const currentUserElement = document.getElementById('current-user');
+
+      //login
+      const loginContainer = document.getElementById('login-container');
+      const formLogin = document.getElementById('login-form');
+      const nomUsuari = document.getElementById('username-input');
+      let nom = '';
+
+      chat.style.display = 'none';
+
+      // Entrada al xat
+      formLogin.addEventListener('submit', function (event) {
+        event.preventDefault();
+        
+        if (nomUsuari.value.trim() !== '') {
+          nom = nomUsuari.value.trim();
+          currentUserElement.textContent = nom;
+          loginContainer.style.display = 'none';
+          chat.style.display = 'block';
+        }
+      });
+
+      // Connexió amb Socket.IO
+      const socket = io();
+
+      // Estat de la connexió
+      socket.on('connect', function () {
+        statusElement.textContent = 'Connectat';
+        statusElement.className = 'status-connected';
+        input.disabled = false;
+        sendBtn.disabled = false;
+      });
+
+      socket.on('disconnect', function () {
+        statusElement.textContent = 'Desconnectat';
+        statusElement.className = 'status-disconnected';
+        input.disabled = true;
+        sendBtn.disabled = true;
+      });
+
+      // Enviament del missatge
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (input.value.trim() !== '') {
+          socket.emit('chat message', {
+            usuari: nom,
+            text: input.value
+          });
+          input.value = '';
+        }
+      });
+
+      // Recepció de missatges
+      socket.on('chat message', function (msg) {
+        const item = document.createElement('li');
+        item.textContent = '[' + msg.hora + '] ' + msg.usuari + ': ' + msg.text;
+        messages.appendChild(item);
+        messages.scrollTop = messages.scrollHeight;
+      });
+    </script>
+</body>
+</html>

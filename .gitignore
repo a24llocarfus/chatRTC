@@ -1,0 +1,12 @@
+# Dependències
+node_modules/
+
+# Registres i logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Fitxers de sistema operatiu i entorn
+.DS_Store
+Thumbs.db
+.env
